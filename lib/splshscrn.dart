@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // After 3 seconds go to Welcome
+    Timer(const Duration(seconds: 3), () {
+      Navigator.pushReplacementNamed(context, '/welcome');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // background color
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo from assets
-            Image.asset(
-              'assets/images/taskify_logo.jpg', // your logo
-              width: 150,
-            ),
+            Image.asset('assets/images/Taskify_logo.png', width: 200),
             const SizedBox(height: 20),
-            // App name
             const Text(
               "Taskify",
               style: TextStyle(

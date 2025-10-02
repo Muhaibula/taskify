@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
-import 'splshscrn.dart'; // make sure the filename matches exactly
-
+import 'splshscrn.dart';
+import 'wecme.dart';
+import 'signin.dart';
+import 'creteac.dart';
+import 'homescreen.dart';
 void main() {
-  runApp(const MyApp());
+  runApp(const TaskifyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TaskifyApp extends StatelessWidget {
+  const TaskifyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'Taskify',
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(), // App starts from Splash Screen
+      initialRoute: '/', // Start from Splash
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
+        '/sign in': (context) => const SignInScreen(),
+        '/create account': (context) => const CreateAccountScreen(),
+        '/homepage': (context) => const HomeScreen(),
+      },
     );
   }
 }

@@ -1,24 +1,8 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(TaskifyApp());
-}
-
-class TaskifyApp extends StatelessWidget {
-  const TaskifyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Taskify',
-      debugShowCheckedModeBanner: false,
-      home: TaskifyLoginScreen(),
-    );
-  }
-}
-
-class TaskifyLoginScreen extends StatelessWidget {
-  const TaskifyLoginScreen({super.key});
+import 'signin.dart'; // ✅ import your sign-in screen
+import 'creteac.dart';
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,29 +12,29 @@ class TaskifyLoginScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo from assets
+            // --- Logo section ---
             Padding(
-              padding: EdgeInsets.only(top: 60.0, bottom: 16.0),
+              padding: const EdgeInsets.only(top: 60.0, bottom: 16.0),
               child: Column(
                 children: [
                   Container(
-                    height: 160,
-                    width: 160,
-                    decoration: BoxDecoration(
+                    height: 220, // bigger circle
+                    width: 220,
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: Color(0xFFEAF6FF),
                     ),
                     child: Center(
                       child: Image.asset(
-                        'assets/images/taskify_logo.jpg', // Change this to your actual asset path
-                        height: 120,
-                        width: 120,
+                        'assets/images/Taskify_logo.png',
+                        height: 300,
+                        width: 300,
                         fit: BoxFit.contain,
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     'Taskify',
                     style: TextStyle(
                       fontSize: 18,
@@ -61,9 +45,9 @@ class TaskifyLoginScreen extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 48),
+            const SizedBox(height: 48),
 
-            Text(
+            const Text(
               'Explore Taskify',
               style: TextStyle(
                 fontSize: 32,
@@ -71,8 +55,8 @@ class TaskifyLoginScreen extends StatelessWidget {
                 letterSpacing: 0.5,
               ),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Your All Tasks In one place',
               style: TextStyle(
                 fontSize: 16,
@@ -80,16 +64,21 @@ class TaskifyLoginScreen extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 80),
+            const SizedBox(height: 80),
 
-            // Sign In Button
+            // ✅ Sign In Button (fix navigation here)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignInScreen()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
@@ -97,33 +86,38 @@ class TaskifyLoginScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(18),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Sign In',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
+                    style: TextStyle(fontSize: 20),
                   ),
                 ),
               ),
             ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-            // Create Account Button
+            // Create Account Button (you can link later)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder:(_) => CreateAccountScreen()),
+
+                    );
+                    // later: link to CreateAccount screen
+                  },
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.black),
+                    side: const BorderSide(color: Colors.black),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Create account',
                     style: TextStyle(
                       color: Colors.black,
