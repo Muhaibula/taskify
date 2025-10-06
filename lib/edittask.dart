@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AddTaskPage extends StatefulWidget {
-  final Map<String, dynamic>? existingTask;
-  final String? taskId;
+class EditTaskPage extends StatefulWidget {
+  final Map<String, dynamic> existingTask;
+  final String taskId;
 
-  const AddTaskPage({super.key, this.existingTask, this.taskId});
+  const EditTaskPage({super.key, required this.existingTask, required this.taskId});
+
   @override
-  _AddTaskPageState createState() => _AddTaskPageState();
+  _EditTaskPageState createState() => _EditTaskPageState();
 }
 
-class _AddTaskPageState extends State<AddTaskPage> {
+class _EditTaskPageState extends State<EditTaskPage> {
   final TextEditingController _taskController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   DateTime? _selectedDate;
@@ -19,10 +20,38 @@ class _AddTaskPageState extends State<AddTaskPage> {
   bool _notification = false;
   String _selectedCategory = "Default";
 
+  @override
+  void initState() {
+    super.initState();
+    _prefill();
+  }
+
+  void _prefill() {
+    final data = widget.existingTask;
+    _taskController.text = data['title'] ?? '';
+    _descController.text = data['description'] ?? '';
+    _priority = data['priority'] ?? _priority;
+    _selectedCategory = data['category'] ?? _selectedCategory;
+    _notification = data['notification'] ?? _notification;
+    if (data['date'] != null) {
+      try {
+        _selectedDate = DateTime.parse(data['date']);
+      } catch (_) {}
+    }
+    if (data['time'] != null) {
+      final parts = (data['time'] as String).split(':');
+      if (parts.length >= 2) {
+        final h = int.tryParse(parts[0]) ?? 0;
+        final m = int.tryParse(parts[1]) ?? 0;
+        _selectedTime = TimeOfDay(hour: h, minute: m);
+      }
+    }
+  }
+
   Future<void> _pickDate() async {
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
@@ -35,7 +64,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   Future<void> _pickTime() async {
     TimeOfDay? picked =
-        await showTimePicker(context: context, initialTime: TimeOfDay.now());
+        await showTimePicker(context: context, initialTime: _selectedTime ?? TimeOfDay.now());
     if (picked != null) {
       setState(() {
         _selectedTime = picked;
@@ -50,84 +79,36 @@ class _AddTaskPageState extends State<AddTaskPage> {
       );
       return;
     }
-    if (widget.taskId != null) {
-      // Update existing task
-      await FirebaseFirestore.instance
-          .collection('tasks')
-          .doc(widget.taskId)
-          .update({
-        'title': _taskController.text.trim(),
-        'description': _descController.text.trim(),
-        'priority': _priority,
-        'category': _selectedCategory,
-        'notification': _notification,
-        'date': _selectedDate?.toIso8601String(),
-        'time': _selectedTime != null
-            ? "${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}"
-            : null,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Task updated successfully")),
-      );
-    } else {
-      final newTaskId = FirebaseFirestore.instance.collection('tasks').doc().id;
+    await FirebaseFirestore.instance.collection('tasks').doc(widget.taskId).update({
+      'title': _taskController.text.trim(),
+      'description': _descController.text.trim(),
+      'priority': _priority,
+      'category': _selectedCategory,
+      'notification': _notification,
+      'date': _selectedDate?.toIso8601String(),
+      'time': _selectedTime != null
+          ? "${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}"
+          : null,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
 
-      await FirebaseFirestore.instance.collection('tasks').doc(newTaskId).set({
-        'task_id': newTaskId,
-        'title': _taskController.text.trim(),
-        'description': _descController.text.trim(),
-        'priority': _priority,
-        'status': "Pending", // always Pending when created
-        'category': _selectedCategory,
-        'notification': _notification,
-        'date': _selectedDate?.toIso8601String(),
-        'time': _selectedTime != null
-            ? "${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}"
-            : null,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Task added successfully")),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Task updated successfully")),
+    );
 
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    // If editing, prefill controllers with existing data
-    if (widget.existingTask != null) {
-      final data = widget.existingTask!;
-      _taskController.text = data['title'] ?? '';
-      _descController.text = data['description'] ?? '';
-      _priority = data['priority'] ?? _priority;
-      _selectedCategory = data['category'] ?? _selectedCategory;
-      _notification = data['notification'] ?? _notification;
-      if (data['date'] != null) {
-        try {
-          _selectedDate = DateTime.parse(data['date']);
-        } catch (_) {}
-      }
-      if (data['time'] != null) {
-        final parts = (data['time'] as String).split(':');
-        if (parts.length >= 2) {
-          final h = int.tryParse(parts[0]) ?? 0;
-          final m = int.tryParse(parts[1]) ?? 0;
-          _selectedTime = TimeOfDay(hour: h, minute: m);
-        }
-      }
-    }
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
         title: const Text(
-          "New Task",
+          "Edit Task",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
@@ -142,9 +123,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title
-              const Text("Task Title",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text("Task Title", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(
                 controller: _taskController,
@@ -152,16 +131,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   hintText: "Enter task name",
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Description
-              const Text("Description",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text("Description", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(
                 controller: _descController,
@@ -170,14 +145,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   hintText: "Add description (optional)",
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Date & Time
               Row(
                 children: [
                   Expanded(
@@ -185,9 +157,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       onPressed: _pickDate,
                       icon: const Icon(Icons.calendar_today_outlined),
                       label: Text(
-                        _selectedDate == null
-                            ? "Set Date"
-                            : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}",
+                        _selectedDate == null ? "Set Date" : "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}",
                       ),
                     ),
                   ),
@@ -197,9 +167,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       onPressed: _pickTime,
                       icon: const Icon(Icons.access_time_outlined),
                       label: Text(
-                        _selectedTime == null
-                            ? "Set Time"
-                            : "${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}",
+                        _selectedTime == null ? "Set Time" : "${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}",
                       ),
                     ),
                   ),
@@ -207,9 +175,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
               ),
               const SizedBox(height: 20),
 
-              // Priority
-              const Text("Priority",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text("Priority", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               Wrap(
                 spacing: 10,
                 children: ["Low", "Medium", "High"].map((level) {
@@ -226,13 +192,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
               ),
               const SizedBox(height: 20),
 
-              // Notification
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Notification",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text("Notification", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   Switch(
                     value: _notification,
                     onChanged: (val) {
@@ -245,16 +208,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
               ),
               const SizedBox(height: 20),
 
-              // Category
-              const Text("Category",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text("Category", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
-                items: ["Default", "Work", "Personal", "Shopping"]
-                    .map((category) =>
-                        DropdownMenuItem(value: category, child: Text(category)))
-                    .toList(),
+                items: ["Default","education", "Work", "Personal", "Shopping"].map((category) => DropdownMenuItem(value: category, child: Text(category))).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedCategory = value!;
@@ -263,12 +221,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
               ),
               const SizedBox(height: 30),
 
-              // Add button
               Center(
                 child: ElevatedButton.icon(
                   onPressed: _saveTask,
                   icon: const Icon(Icons.check),
-                  label: const Text("Add Task"),
+                  label: const Text("Save Changes"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,

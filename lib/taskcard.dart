@@ -1,43 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TaskCard extends StatelessWidget {
+  final String taskId;
   final String title;
   final String description;
+  final String status;
 
   const TaskCard({
     super.key,
+    required this.taskId,
     required this.title,
     required this.description,
+    required this.status,
   });
+
+  void _markAsCompleted() {
+    FirebaseFirestore.instance
+        .collection('tasks')
+        .doc(taskId)
+        .update({'status': 'Completed'});
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 185, 207, 248), // same style
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      child: ListTile(
+        title: Text(title,
+            style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              description,
-              style: const TextStyle(color: Colors.black54),
-            ),
-          ],
-        ),
+                decoration: status == "Completed"
+                    ? TextDecoration.lineThrough
+                    : TextDecoration.none)),
+        subtitle: Text(description),
+        trailing: status == "Pending"
+            ? IconButton(
+                icon: const Icon(Icons.check_circle, color: Colors.green),
+                onPressed: _markAsCompleted,
+              )
+            : const Icon(Icons.check_circle, color: Colors.grey),
       ),
     );
   }
