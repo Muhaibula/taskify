@@ -4,8 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'splshscrn.dart';
 import 'wecme.dart';
-//import 'signin.dart';
-//import 'creteac.dart';
 import 'homescreen.dart';
 import 'profile.dart';
 

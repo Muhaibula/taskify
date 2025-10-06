@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:taskify/creteac.dart';
 import 'signin.dart'; 
-//import 'creteac.dart';
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
