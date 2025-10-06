@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'creteac.dart';
-import 'homescreen.dart'; // ← Make sure you import your home page
+import 'homescreen.dart';
+import 'fp.dart'; // 👈 Import your Forgot Password screen
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -36,7 +37,6 @@ class _SignInScreenState extends State<SignInScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // ✅ Navigate to HomePage after successful login
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -53,19 +53,10 @@ class _SignInScreenState extends State<SignInScreen> {
         errorMessage = "Invalid email format.";
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Unknown error: $e")),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(errorMessage)));
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -73,21 +64,24 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() => _isLoading = true);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        // user cancelled
-        return;
-      }
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      if (googleUser == null) return;
+
+      final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
       await _auth.signInWithCredential(credential);
+
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Google sign-in failed: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Google sign-in failed: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -115,13 +109,18 @@ class _SignInScreenState extends State<SignInScreen> {
                 const Center(
                   child: Column(
                     children: [
-                      Text('Taskify', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
+                      Text('Taskify',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 28)),
                       SizedBox(height: 6),
-                      Text('Welcome to Taskify', style: TextStyle(color: Colors.black54)),
+                      Text('Welcome to Taskify',
+                          style: TextStyle(color: Colors.black54)),
                     ],
                   ),
                 ),
                 const SizedBox(height: 40),
+
+                // Email field
                 const Text('Email address'),
                 const SizedBox(height: 6),
                 TextField(
@@ -130,7 +129,10 @@ class _SignInScreenState extends State<SignInScreen> {
                     hintText: 'Enter your email',
                   ),
                 ),
+
                 const SizedBox(height: 20),
+
+                // Password field
                 const Text('Password'),
                 const SizedBox(height: 6),
                 TextField(
@@ -146,7 +148,32 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+
+                // 👇 Forgot password link
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const ForgotPasswordScreen()), // navigate to fp.dart
+                      );
+                    },
+                    child: const Text(
+                      "Forgot Password?",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // Sign in button
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -157,10 +184,15 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Sign In', style: TextStyle(fontSize: 20, color: Colors.white)),
+                        : const Text('Sign In',
+                            style:
+                                TextStyle(fontSize: 20, color: Colors.white)),
                   ),
                 ),
+
                 const SizedBox(height: 20),
+
+                // Create account link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -170,45 +202,49 @@ class _SignInScreenState extends State<SignInScreen> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                              builder: (context) =>
-                                  const CreateAccountScreen()),
+                              builder: (context) => const CreateAccountScreen()),
                         );
                       },
                       child: const Text(
-                          "Create here",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
-                          ),
+                        "Create here",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
                         ),
+                      ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 12),
+
                 // OR separator
                 Row(
                   children: const [
                     Expanded(child: Divider()),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('OR', style: TextStyle(color: Colors.black54)),
+                      child:
+                          Text('OR', style: TextStyle(color: Colors.black54)),
                     ),
                     Expanded(child: Divider()),
                   ],
                 ),
+
                 const SizedBox(height: 12),
-                // Google Sign-In button (moved below Create link)
+
+                // Google Sign-In
                 SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: OutlinedButton.icon(
-                    icon: Image.asset('assets/images/google.png', width: 20, height: 20),
+                    icon: Image.asset('assets/images/google.png',
+                        width: 20, height: 20),
                     label: const Text('Sign in with Google'),
                     onPressed: _isLoading ? null : _signInWithGoogle,
                   ),
                 ),
-                const SizedBox(height: 12),
               ],
             ),
           ),

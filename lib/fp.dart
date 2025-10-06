@@ -1,7 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'signin.dart'; // 👈 Import SignInScreen so we can navigate back
 
-class ForgotPasswordScreen extends StatelessWidget {
+class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
+
+  @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isLoading = false;
+
+  Future<void> _resetPassword() async {
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter your email address")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Password reset email sent successfully")),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = "Failed to send reset email.";
+      if (e.code == 'user-not-found') {
+        message = "No user found with this email.";
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +53,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               // Back button
               IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context),
               ),
               const SizedBox(height: 20),
 
@@ -57,6 +92,8 @@ class ForgotPasswordScreen extends StatelessWidget {
 
               // Email TextField
               TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: "Enter your email address",
                   hintStyle: const TextStyle(color: Colors.black38),
@@ -85,13 +122,13 @@ class ForgotPasswordScreen extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  onPressed: () {
-                    // Handle send code
-                  },
-                  child: const Text(
-                    "Send code",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
+                  onPressed: _isLoading ? null : _resetPassword,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          "Send code",
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                 ),
               ),
 
@@ -99,20 +136,29 @@ class ForgotPasswordScreen extends StatelessWidget {
 
               // Bottom login text
               Center(
-                child: RichText(
-                  text: TextSpan(
-                    text: "Remember password? ",
-                    style: const TextStyle(color: Colors.black54, fontSize: 14),
-                    children: [
-                      TextSpan(
-                        text: "Log in",
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignInScreen()),
+                    );
+                  },
+                  child: RichText(
+                    text: const TextSpan(
+                      text: "Remember password? ",
+                      style: TextStyle(color: Colors.black54, fontSize: 14),
+                      children: [
+                        TextSpan(
+                          text: "Log in",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
-                        // Add login tap event
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
