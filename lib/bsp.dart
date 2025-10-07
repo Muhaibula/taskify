@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -44,6 +47,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _notificationsEnabled = value;
               });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(value
+                      ? "Notifications enabled"
+                      : "Notifications disabled"),
+                ),
+              );
             },
             accentColor: accentGreen,
           ),
@@ -55,6 +65,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _darkModeEnabled = value;
               });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(value ? "Dark mode on" : "Dark mode off"),
+                ),
+              );
             },
             accentColor: accentGreen,
           ),
@@ -66,19 +81,147 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildListTile(
             icon: Icons.info_outline,
             title: "About App",
-            onTap: () {},
+            onTap: () {
+              showAboutDialog(
+                context: context,
+                applicationName: "Taskify",
+                applicationVersion: "1.0.0",
+                children: const [
+                  Text(
+                      "Taskify helps you organize your tasks efficiently and stay productive.\n\nBuilt with Flutter & Firebase 💚"),
+                ],
+              );
+            },
           ),
 
+          // Privacy Policy
           _buildListTile(
             icon: Icons.privacy_tip_outlined,
             title: "Privacy Policy",
-            onTap: () {},
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Privacy Policy"),
+                  content: const Text(
+                      "We value your privacy. Taskify does not share your data with third parties. Your data is securely stored in Firebase."),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text("Close"),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
 
+          // Help & Support
           _buildListTile(
             icon: Icons.help_outline,
             title: "Help & Support",
-            onTap: () {},
+            onTap: () {
+              final _controller = TextEditingController();
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Send Feedback"),
+                  content: TextField(
+                    controller: _controller,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      hintText: "Describe your issue or suggestion",
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final msg = _controller.text.trim();
+                        if (msg.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Please enter feedback")),
+                          );
+                          return;
+                        }
+                        await FirebaseFirestore.instance
+                            .collection('feedback')
+                            .add({
+                          'message': msg,
+                          'user': FirebaseAuth.instance.currentUser?.uid,
+                          'createdAt': FieldValue.serverTimestamp(),
+                        });
+                        if (ctx.mounted) Navigator.of(ctx).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text("Thanks for your feedback!")),
+                        );
+                      },
+                      child: const Text("Send"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          const Divider(thickness: 1),
+
+          // Follow Us section
+          _buildListTile(
+            icon: Icons.group_outlined,
+            title: "Follow Us",
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Follow us"),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.link),
+                        title: const Text("Twitter"),
+                        subtitle:
+                            const Text("https://twitter.com/taskifyofficial"),
+                        onTap: () {
+                          Clipboard.setData(const ClipboardData(
+                              text: "https://twitter.com/taskifyofficial"));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Twitter link copied")),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.link),
+                        title: const Text("Instagram"),
+                        subtitle:
+                            const Text("https://instagram.com/taskifyapp"),
+                        onTap: () {
+                          Clipboard.setData(const ClipboardData(
+                              text: "https://instagram.com/taskifyapp"));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Instagram link copied")),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text("Close"),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
 
           const Divider(thickness: 1),
@@ -94,7 +237,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              onPressed: () {},
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Signed out successfully")),
+                  );
+                  Navigator.pushReplacementNamed(context, '/welcome');
+                }
+              },
               child: const Text(
                 "Log Out",
                 style: TextStyle(
@@ -134,7 +285,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Helper widget for normal list tiles
+  // Helper widget for list tiles
   Widget _buildListTile({
     required IconData icon,
     required String title,
