@@ -13,8 +13,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Color primaryGreen = const Color(0xFFA8E6CF); // pastel mint green
-    final Color accentGreen = const Color(0xFF56B894); // soft teal green
+    final Color primaryGreen = const Color.fromARGB(255, 240, 223, 245); // pastel mint green
+    final Color accentGreen = const Color.fromARGB(255, 244, 224, 244); // soft teal green
     final Color backgroundColor = const Color(0xFFF8FFF8); // very light green tint
 
     return Scaffold(

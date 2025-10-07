@@ -86,7 +86,11 @@ class HomeScreen extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.settings_outlined),
                     title: const Text('Settings'),
-                    onTap: () => Navigator.pushNamed(context, '/settings'),
+                    onTap: () {
+  Navigator.pop(context); // closes drawer first
+  Navigator.pushNamed(context, '/settings');
+},
+
                   ),
                   const Divider(),
 

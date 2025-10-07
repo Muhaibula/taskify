@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'bsp.dart';
 import 'splshscrn.dart';
 import 'wecme.dart';
 import 'homescreen.dart';
@@ -26,8 +26,7 @@ class TaskifyApp extends StatelessWidget {
       routes: {
         '/welcome': (context) => const WelcomeScreen(),
         '/profile': (context) => const ProfileScreen(),
-        //'/sign in': (context) => const SignInScreen(),
-        //'/create account': (context) => const CreateAccountScreen(),
+        '/settings': (context) => const SettingsScreen(),
         '/home': (context) => const HomeScreen(),
       },
     );
@@ -48,7 +47,7 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (snapshot.hasData) {
-          return const SplashScreen(); 
+          return const HomeScreen(); 
         } else {
           return const SplashScreen(); 
         }
